@@ -1,0 +1,383 @@
+package cn.edu.hdu.service.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.codec.digest.DigestUtils;
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.zlzkj.app.util.HqlBuilder;
+import com.zlzkj.core.sql.Row;
+
+import cn.edu.hdu.Code.GlobalParam;
+import cn.edu.hdu.Code.ReturnCode;
+import cn.edu.hdu.Code.UrlCode;
+import cn.edu.hdu.config.webSend;
+import cn.edu.hdu.dao.impl.MemberDaoImpl;
+import cn.edu.hdu.pojo.GlobalCfg;
+import cn.edu.hdu.pojo.Member;
+import cn.edu.hdu.service.MemberService;
+import cn.edu.hdu.util.DataUtil;
+
+@Service("memberService")
+public class MemberServiceImpl extends GenericService<Member> implements MemberService {
+
+	@Resource
+	private GlobalCfgServiceImpl globalCfgService;
+
+	
+	public MemberDaoImpl getMemberDao() {
+        return (MemberDaoImpl)this.getGenericDao();
+    }
+
+	@Autowired
+	public void setMemberDao(MemberDaoImpl memberDao) {
+	    this.setGenericDao(memberDao);
+	}
+	@Override
+	public String addMember(Member member,boolean tf) {
+		try {
+			//old member new
+			List<Member> memInDb = this.findByProperty("phone", member.getPhone());
+			if(!tf && (memInDb != null && memInDb.size() > 0)){
+					return ReturnCode.PHONE_HAVE_MEMBER;
+			}else{
+				String initPwd = GlobalParam.DEFAULT_PASSWORD;
+				List<GlobalCfg> gcList = globalCfgService.findAll();
+				if(gcList.size() == 1 && gcList.get(0).getInitPwd() != null && !gcList.get(0).getInitPwd().equals("")){
+					initPwd = gcList.get(0).getInitPwd();
+				}
+				member.setCreateDate(new Date());
+				member.setPassword(DigestUtils.md5Hex(initPwd));
+				this.save(member);
+			}
+		} catch (Exception e) {
+			return ReturnCode.FAILED_STR;
+		}
+		return ReturnCode.SUCCESS_STR;
+	}
+
+	@Override
+	public Row getMemberList(String accountId,String memberName, String memberId,
+			String memberPhone,int rownum,int page) {
+		HqlBuilder hb = new HqlBuilder();
+		String sql_data = hb.select("mem.id,mem.name,mem.member_no,mem.phone,mem.coin,mem.score,"
+				+ "mem.batterynum ")
+				.from("Member mem")
+				.where("mem.store_id", accountId)
+				.where("mem.name", memberName)
+				.where("mem.member_no", memberId)
+				.where("mem.phone", memberPhone)
+				.orderby("mem.create_date", "DESC")
+				.buildHql();
+		Query query = this.getSqlQuery(sql_data);
+		hb.setParam(query);
+		List<Object[]> accList = DataUtil.getPages(query, page, rownum).list();
+		String sql_sum = hb.select("count(*)")
+				.from("Member mem")
+				.where("mem.store_id", accountId)
+				.where("mem.name", memberName)
+				.where("mem.member_no", memberId)
+				.where("mem.phone", memberPhone)
+				.buildHql();
+		query = this.getSqlQuery(sql_sum);
+		hb.setParam(query);
+		Object accSum = query.uniqueResult();
+		List<Row> rows = new ArrayList<Row>();
+		for(Object[] acc:accList){
+			Row row = new Row();
+			row.put("id", acc[0]);
+			row.put("name", acc[1]);
+			row.put("member_no", acc[2]);
+			row.put("phone", acc[3]);
+			row.put("coin", acc[4]);
+			row.put("score", acc[5]);
+		//	row.put("batterynum", acc[6]);
+			rows.add(row);
+		}
+		Row row = new Row();
+		row.put("total", accSum);
+		row.put("rows", rows);
+		return row;
+	}
+	
+	@Override
+	public Row getEditMemberList(String accountId,String memberName, String memberId,
+			String memberPhone,int rownum,int page) {
+		HqlBuilder hb = new HqlBuilder();
+		String sql_data = hb.select("mem.id,mem.name,mem.member_no,mem.phone,mem.coin,mem.score,"
+				+ "mem.batterynum ")
+				.from("Member mem")
+				.where("mem.store_id", accountId)
+				.like("mem.name", memberName)
+				.like("mem.member_no", memberId)
+				.like("mem.phone", memberPhone)
+				.orderby("mem.create_date", "DESC")
+				.buildHql();
+		Query query = this.getSqlQuery(sql_data);
+		hb.setParam(query);
+		List<Object[]> accList = DataUtil.getPages(query, page, rownum).list();
+		String sql_sum = hb.select("count(*)")
+				.from("Member mem")
+				.where("mem.store_id", accountId)
+				.like("mem.name", memberName)
+				.like("mem.member_no", memberId)
+				.like("mem.phone", memberPhone)
+				.buildHql();
+		query = this.getSqlQuery(sql_sum);
+		hb.setParam(query);
+		Object accSum = query.uniqueResult();
+		List<Row> rows = new ArrayList<Row>();
+		for(Object[] acc:accList){
+			Row row = new Row();
+			row.put("id", acc[0]);
+			row.put("name", acc[1]);
+			row.put("member_no", acc[2]);
+			row.put("phone", acc[3]);
+			row.put("coin", acc[4]);
+			row.put("score", acc[5]);
+		//	row.put("batterynum", acc[6]);
+			rows.add(row);
+		}
+		Row row = new Row();
+		row.put("total", accSum);
+		row.put("rows", rows);
+		return row;
+	}
+	
+	public Row getMemberListAdmin(String memberName, String memberNo,
+			String memberPhone,String storeName,int rownum,int page) {
+		HqlBuilder hb = new HqlBuilder();
+		String hql_data = hb.select("mem.id,mem.name name1,mem.member_no,mem.phone,mem.coin,mem.score,mem.batterynum,acc.name name2 from Member mem "
+				+ "left join Account acc on acc.id = mem.store_id")
+				.like("mem.name", memberName)
+				.like("mem.member_no", memberNo)
+				.like("mem.phone", memberPhone)
+				.like("acc.name", storeName)
+				.orderby("mem.create_date", "DESC")
+				.buildHql();
+		Query query = this.getSqlQuery(hql_data);
+		hb.setParam(query);
+		List<Object[]> accList = DataUtil.getPages(query, page, rownum).list();
+		String hql_sum = hb.select("count(*) from Member mem left join Account acc on acc.id = mem.store_id")
+				.like("mem.name", memberName)
+				.like("mem.member_no", memberNo)
+				.like("mem.phone", memberPhone)
+				.like("acc.name", storeName)
+				.buildHql();
+		query = this.getSqlQuery(hql_sum);
+		hb.setParam(query);
+		Object accSum = query.uniqueResult();
+		List<Row> rows = new ArrayList<Row>();
+		for(Object[] acc:accList){
+			Row row = new Row();
+			row.put("id", acc[0]);
+			row.put("name", acc[1]);
+			row.put("member_no", acc[2]);
+			row.put("phone", acc[3]);
+			row.put("coin", acc[4]);
+			row.put("score", acc[5]);
+	//		row.put("batterynum", acc[6]);
+			row.put("store", acc[7]);
+			rows.add(row);
+		}
+		Row row = new Row();
+		row.put("total", accSum);
+		row.put("rows", rows);
+		return row;
+	}
+
+	@Override
+	public Member validate(String memberNo, String password) {
+		Member mem = null;
+		HqlBuilder hb = new HqlBuilder();
+		String hql = hb.from("Member m")  //账号登陆
+						.where("m.memberNo", memberNo)
+						.where("m.password", DigestUtils.md5Hex(password))
+						.buildHql();
+		Query query = this.getQuery(hql);
+		hb.setParam(query);
+		try {
+			mem = (Member)query.uniqueResult();
+		} catch (HibernateException e) {
+			e.printStackTrace();
+			return null;
+		}
+		if(mem != null){   // 账号登陆成功直接返回
+			return mem;
+		}
+		hql = hb.from("Member m")  //手机号登陆
+				.where("m.phone", memberNo)
+				.where("m.password", DigestUtils.md5Hex(password))
+				.buildHql();
+		query = this.getQuery(hql);
+		hb.setParam(query);
+		try {
+			mem = (Member)query.uniqueResult();
+		} catch (HibernateException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return mem;       //有就返回对象，没有就返回null
+	}
+
+	@Override
+	public int updatePassword(String memberNo) {
+		List<GlobalCfg> gcList = globalCfgService.findAll();
+		String psd=gcList.get(0).getInitPwd();
+		return this.getMemberDao().updatePassword(memberNo,psd);		
+	}
+
+	@Override
+	public boolean scoreChange(Long id, Long number, Long score) {
+		try{
+			Member member=this.findById(id);
+			Long memscore=member.getScore();
+			Long totalscore=number*score;
+			if(memscore<totalscore) return false;
+			this.getMemberDao().updateScore(id,memscore-totalscore);
+			//老系统接口积分改变
+			return true;
+		}catch(Exception e){
+			return false;
+		}
+	}
+
+	@Override
+	public boolean batteryAcc(Long id, long number) {
+		try{
+			Member member=this.findById(id);
+			Long battnum=member.getBatterynum();
+			if(battnum<number) return false;
+			this.getMemberDao().updateBattnum(member.getMemberNo(),battnum-number);
+			//web service 修改老系统的电池数量，记录用户兑换电池记录
+			return true;
+		}catch(Exception e){
+			return false;
+		}
+	}
+
+	@Override
+	public void addScore(String memberNo, Long l) {
+		List<Member> member=this.findByProperty("memberNo", memberNo);
+		Long score=member.get(0).getScore()+l;
+		Long id=member.get(0).getId();
+		this.getMemberDao().updateScore(id,score);
+	}
+
+	@Override
+	public void addCoin(String memberNo, Long l) {
+		List<Member> member=this.findByProperty("memberNo", memberNo);
+		Long coin=member.get(0).getCoin()+l;
+		Long id=member.get(0).getId();
+		this.getMemberDao().updateCoin(id,coin);
+	}
+	
+	@Override
+	public String findScore(String phone) {
+		try{
+			List<Member> member=this.findByProperty("phone", phone);
+			Long score=member.get(0).getScore();
+			return score.toString();
+		}catch(Exception e){
+			return "0";
+		}
+	}
+	
+	@Override
+	public String findCoin(String phone) {
+		try{
+			List<Member> member=this.findByProperty("phone", phone);
+			Long coin=member.get(0).getCoin();
+			return coin.toString();
+		}catch(Exception e){
+			return "0";
+		}
+	}
+
+	@Override
+	public boolean judgeExist(String memberno) {
+		List<Member> member=this.findByProperty("memberNo", memberno);
+		if(member.size()==0) return false;
+		return true;
+	}
+
+	@Override
+	public String findName(String memberNo) {
+		try{
+			List<Member> member=this.findByProperty("memberNo", memberNo);
+			String name=member.get(0).getName();
+			return name;
+		}catch(Exception e){
+			return null;
+		}
+	}
+	
+	@Override
+	public String findNameById(Long id){
+		try{
+			List<Member> member=this.findByProperty("id", id);
+			String name=member.get(0).getName();
+			return name;
+		}catch(Exception e){
+			return null;
+		}
+	}
+
+	public void updateMem(Member member) {
+		Member mem=this.findById(member.getId());
+		mem.setName(member.getName());
+		mem.setPhone(member.getPhone());
+		mem.setIdCardNo(member.getIdCardNo());
+		this.update(mem);
+	}
+
+	@Override
+	public boolean memResetPwd(Long id,String pwd) {
+		try {
+			Member m = this.getMemberDao().findById(id);
+			if(pwd == null){
+				m.setPassword(null);
+			}else{
+				m.setPassword(DigestUtils.md5Hex(pwd));
+			}
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	
+	@Override
+	public String insertScore(String score ,String bsc011,String detail,String pdtid,String num,String changemon,String actiscore,String buyscore,String applycoin,String changecoin) throws Exception{
+		try {
+			String url = UrlCode.URL;
+			String method = "insertScore";
+			//String bsc011=account.getAccount();
+			Object[] opAddEntryArgs=new Object[] {bsc011,score,detail,pdtid,num,changemon,actiscore,buyscore,applycoin,changecoin};
+			String battnum=(String)webSend.sendService(opAddEntryArgs, url, method);
+			return battnum;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new Exception();
+		}
+	}
+	
+	@Override
+	public String changePhone(String oldPhone, String newPhone) {
+		try{
+			this.getMemberDao().changePhone(oldPhone, newPhone);
+		}catch (Exception e) {
+			return "false";
+		}		
+		return "true";
+	}
+
+}

@@ -1,0 +1,121 @@
+package cn.edu.hdu.printpdf;
+
+import java.io.File;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.ui.Model;
+
+import com.itextpdf.forms.PdfAcroForm;
+import com.itextpdf.forms.fields.PdfFormField;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.PdfWriter;
+
+import cn.edu.hdu.pojo.Battery;
+import cn.edu.hdu.pojo.MemBat;
+import cn.edu.hdu.pojo.Store;
+
+
+
+
+public class PrintPdf {
+	
+	public String printPdf(String printName,Long id ,Long getBatNum,String batteryType,MemBat memBat,Battery battery,Store store,HttpServletRequest request){
+
+		try {
+			//System.out.println(new java.sql.Date(System.currentTimeMillis())+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			//姓名
+
+			//电池编号
+			String printBatteryType = memBat.getBatteryType();
+			//电池数量
+			String printBatteryQty = String.valueOf(memBat.getBatteryQty());
+			//剩余电池数量
+			String printBatteryReQty = String.valueOf(memBat.getBatteryReQty());
+			
+			//店铺名称
+			String printGctNm = store.getGctNm();
+			//店铺地址
+			String printGctAddr = store.getGctAddr();
+			//店铺电话 
+			String printGctTel = store.getGctTel();
+			
+			//电池名称
+			String printBatNm = battery.getName();
+			
+			//领取电池数量
+			String printgetBatNo = String.valueOf(getBatNum);
+			
+			
+			
+//			String templatePath = "D:/huierbat.pdf";
+//			String newPDFPath = request.getContextPath();
+//			System.out.println(newPDFPath);
+			String templatePath =request.
+					getSession().getServletContext().getRealPath("/file")+"/huierbat.pdf"; 
+			// 生成的新文件路径
+//			String newPDFPath = "D:/newhuierbatpdf.pdf";
+			String newPDFPath = request.
+					getSession().getServletContext().getRealPath("");
+			System.out.println(newPDFPath);
+			int ii = newPDFPath.lastIndexOf('h')-1;
+			System.out.println(ii);
+//			newPDFPath.substring(0, 12);
+			newPDFPath = newPDFPath.substring(0, newPDFPath.lastIndexOf('h')-1);
+			System.out.println(newPDFPath);
+			//newPDFPath+="\\file\\newhuierbatpdf.pdf";
+			String randnm = (Math.random()*10000+10000)+"";
+			randnm = randnm.substring(0, 5);
+			
+			String temPath = newPDFPath;
+			File file = new File(temPath+="\\docs\\BatEvi");
+			if(!file.exists())
+				file.mkdir();
+			
+			newPDFPath+="\\docs\\BatEvi\\BatEvi"+randnm+".pdf";
+			System.out.println(newPDFPath);
+			PdfDocument pdf = new PdfDocument(new PdfReader(templatePath), new PdfWriter(newPDFPath));
+	        PdfAcroForm form = PdfAcroForm.getAcroForm(pdf, true);
+	        Map<String, PdfFormField> fields = form.getFormFields();
+	        
+			//处理中文问题  
+			PdfFont font = PdfFontFactory.createFont("STSongStd-Light", "UniGB-UCS2-H", false);  
+			String[] str = {
+					printName, 
+					printGctNm,
+					new java.sql.Date(System.currentTimeMillis()).toString(), 
+					printGctAddr,
+					printGctTel, 
+					printBatNm,
+					printBatteryType, 
+					printBatteryQty,
+					printgetBatNo, 
+					printBatteryReQty,
+					 };
+			int i = 0;
+			java.util.Iterator<String> it = fields.keySet().iterator();
+			while (it.hasNext()) {
+				//获取文本域名称
+				String name = it.next().toString();
+				//填充文本域
+				fields.get(name).setValue(str[i++]).setFont(font).setFontSize(12);
+				System.out.println(name);
+			}	
+			form.flattenFields();//设置表单域不可编辑			
+			pdf.close();
+			
+			return randnm;
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "false";
+		}
+	}
+}

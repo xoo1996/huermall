@@ -1,0 +1,13 @@
+<service name="testwebservice">
+	<Description>
+		Please Type your service description here
+	</Description>
+	<parameter name="ServiceClass" locked="false">cn.edu.hdu.webservice.testwebservice
+	</parameter>
+	<operation name="test">
+		<messageReceiver class="org.apache.axis2.rpc.receivers.RPCMessageReceiver" />
+	</operation>
+	<operation name="rescore">
+		<messageReceiver class="org.apache.axis2.rpc.receivers.RPCMessageReceiver" />
+	</operation>
+</service>

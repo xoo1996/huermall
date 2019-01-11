@@ -1,0 +1,54 @@
+package cn.edu.hdu.service;
+
+import com.zlzkj.core.sql.Row;
+
+import cn.edu.hdu.pojo.MemBat;
+
+
+//新增
+public interface MemBatService {
+	
+	/**
+	 * 通过用户编号获取剩余电池数量
+	 * @param memberNO
+	 * @return
+	 */
+	public long getBatteryReQty(String memberNO,String batteryType);
+	
+	/**
+	 * 通过用户编号获取电池数量
+	 * @param memberNO
+	 * @return
+	 */
+	public long getBatteryQty(String memberNO,String batteryType);
+	
+	/**
+	 * 添加赠送电池信息
+	 * @param memBat
+	 */
+	public void addMenBat(MemBat memBat);
+	
+	/**
+	 * 根据会员名，会员编号，会员手机号查询会员
+	 * @param memberName
+	 * @param memberId
+	 * @param memberPhone
+	 * @param rownum
+	 * @param page
+	 * @return
+	 */
+	public Row getMemBatList(String memberId,int rownum,int page,String account); 
+	
+	/**
+	 * 通过id领取电池
+	 * @param id
+	 */
+	public void getBat(Long id,long getBatNum);
+
+	public MemBat findMemBatById(Long id);
+	
+	public MemBat getMemBatByOrderId(String orderId);
+	
+	public MemBat getMemBatByChargeId(String chargeId);
+
+}

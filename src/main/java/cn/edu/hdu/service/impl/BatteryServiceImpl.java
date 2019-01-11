@@ -1,0 +1,163 @@
+package cn.edu.hdu.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.hibernate.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.zlzkj.app.util.HqlBuilder;
+import com.zlzkj.core.sql.Row;
+
+import cn.edu.hdu.dao.impl.BatteryDaoImpl;
+import cn.edu.hdu.pojo.Battery;
+import cn.edu.hdu.pojo.Gift;
+import cn.edu.hdu.service.BatteryService;
+import cn.edu.hdu.util.DataUtil;
+
+@Service(value="batteryService")
+public class BatteryServiceImpl extends GenericService<Battery> implements
+		BatteryService {
+
+	@Resource
+	private ScoreServiceImpl scoreService;
+	
+	public BatteryDaoImpl getBatteryDao() {
+        return (BatteryDaoImpl)this.getGenericDao();
+    }
+
+	@Autowired
+	public void setBatteryDao(BatteryDaoImpl batteryDao) {
+	    this.setGenericDao(batteryDao);
+	}
+	
+	@Override
+	public Row getBatteryList(String name, String type, int rowNum, int page) {
+		HqlBuilder hb = new HqlBuilder();
+		String hql_data = hb.from("Battery battery")
+				.like("battery.name", name)
+				.where("battery.type", type)
+				.buildHql();
+		Query query = this.getQuery(hql_data);
+		hb.setParam(query);
+		List<Battery> batteryList = DataUtil.getPages(query, page, rowNum).list();
+		String hql_sum = hb.select("count(*)")
+				.from("Battery battery")
+				.like("battery.name", name)
+				.where("battery.type", type)
+				.buildHql();
+		query = this.getQuery(hql_sum);
+		hb.setParam(query);
+		Object batterySum = query.uniqueResult();
+		
+		List<Row> rows = new ArrayList<Row>();
+		for(Battery battery:batteryList){
+			Row row = new Row();
+			row.put("checkboxid", battery.getId());
+			row.put("name", battery.getName());
+			row.put("type", battery.getType());
+			row.put("changeNum", battery.getChangeNum());
+		//	row.put("storeNum", battery.getStoreNum());
+			row.put("score", battery.getScore());
+			rows.add(row);
+		}
+		Row row = new Row();
+		row.put("total", batterySum);
+		row.put("rows", rows);
+		return row;
+	}
+
+	@Override
+	public boolean addBattery(Battery battery) {
+		try {
+			this.save(battery);
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public boolean deleteBattery(Battery battery) {
+		try {
+			this.delete(battery);
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public boolean resetStoreNum(Long id, Long storeNum) {
+		try {
+			Battery batt = this.findById(id);
+			batt.setStoreNum(storeNum);
+			this.save(batt);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	@Override
+	public boolean resetScore(Long id, Long score) {
+		try {
+			Battery batt = this.findById(id);
+			batt.setScore(score);
+			this.update(batt);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	@Override
+	public List<Row> getBattOptionList() {
+		HqlBuilder hb = new HqlBuilder();
+		String hql_data = hb.from("Battery battery where battery.id > '0'")
+				.buildHql();
+		List<Battery> roleList = this.getBatteryDao().findByHql(hql_data, null);
+		List<Row> rows = new ArrayList<Row>();
+		for(Battery role:roleList){
+			Row row = new Row();
+			row.put("id", role.getType());
+			row.put("text", role.getName());
+			rows.add(row);
+		}
+		return rows;
+	}
+	
+	
+		@Override
+		public Long NumScore(Long number, String type) {
+			List<Battery> bt=this.findByProperty("type", type);
+			//if(bt.get(0).getStoreNum()<number) return null;
+			return bt.get(0).getScore();
+		}
+		
+		@Override
+		public void updateStore(long number, String type, Long id, String account) {
+			List<Battery> bt=this.findByProperty("type", type);
+			Long remainStore=bt.get(0).getStoreNum()-number;
+			Long changenum=bt.get(0).getChangeNum()+number;
+			bt.get(0).setStoreNum(remainStore);
+			bt.get(0).setChangeNum(changenum);
+			this.update(bt.get(0));
+			scoreService.record(id,bt.get(0).getName(),bt.get(0).getScore(),number,account);
+		}
+		
+		public Battery getBatteryByType(String type){
+			List<Battery> bt=this.findByProperty("type", type);
+			return bt.get(0);
+			
+		}
+
+		@Override
+		public Battery getBatteryByName(String name) {
+			List<Battery> bt=this.findByProperty("name", name);
+			return bt.get(0);
+		}
+}

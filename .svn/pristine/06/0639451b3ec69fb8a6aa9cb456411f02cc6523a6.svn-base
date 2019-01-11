@@ -1,0 +1,140 @@
+package cn.edu.hdu.service;
+
+import com.zlzkj.core.sql.Row;
+
+import cn.edu.hdu.pojo.Member;
+
+public interface MemberService {
+
+	/**
+	 * 会员登陆验证
+	 * @param memberNo
+	 * @param password
+	 * @return 没有或者异常时返回null；存在时返回实例
+	 */
+	public Member validate(String memberNo,String password);
+	/**
+	 * 添加会员
+	 * @param member
+	 * @param tf
+	 * @return 返回是否是否成功
+	 */
+	public String addMember(Member member,boolean tf);
+	/**
+	 * 显示会员列表，信息经过封装之后返回给视图,模糊查询
+	 * @param accountId session中保存的登陆账号Account的Id
+	 * @param memberName
+	 * @param memberId
+	 * @param memberPhone
+	 * @return
+	 */
+    public Row getMemberList(String accountId,String memberName,String memberId,String memberPhone
+    		,int rownum,int page);
+    /**
+     * 重置会员密码
+     * @param memberno
+     */
+	public int updatePassword(String memberNo);
+	/**
+	 * 会员主动修改自己密码
+	 * @param id
+	 * @return
+	 */
+	public boolean memResetPwd(Long id,String pwd);
+	/**
+	 * 积分兑换
+	 * @param id
+	 * @param giftGroup 
+	 * @param number 
+	 * @return
+	 */
+	public boolean scoreChange(Long id, Long number, Long giftScore);
+	/**
+	 * 电池领取
+	 * @param id
+	 * @param parseLong
+	 * @return
+	 */
+	public boolean batteryAcc(Long id, long parseLong);
+	/**
+	 * 增加用户积分
+	 * @param id
+	 * @param l
+	 */
+	public void addScore(String memberNo, Long l);
+	/**
+	 * 根据会员号返回用户积分
+	 * @param memberno
+	 * @return
+	 */
+	public String findScore(String memberno);
+	/**
+	 * 判断会员是否存在
+	 * @param user
+	 * @return
+	 */
+	public boolean judgeExist(String user);
+	/**
+	 * 返回会员名字
+	 * @param memberNo
+	 * @return 
+	 */
+	public String findName(String memberNo);
+	/**
+	 * 通过id找到会员的名字
+	 * @param Id
+	 * @return
+	 */
+	public String findNameById(Long id);
+	/**
+	 * 老系统更新门店积分
+	 * @param score
+	 * @param bsc011
+	 * @param detail
+	 * @param pdtid
+	 * @param num
+	 * @param changemon
+	 * @param actiscore
+	 * @param buyscore
+	 * @param applycoin
+	 * @param changecoin
+	 * @return
+	 * @throws Exception 
+	 */
+	public String insertScore(String score, String bsc011, String detail,
+			String pdtid, String num, String changemon, String actiscore,
+			String buyscore, String applycoin, String changecoin) throws Exception;
+	/**
+	 * 增加用户惠耳币
+	 * @param memberNo
+	 * @param coin
+	 */
+	public void addCoin(String memberNo, Long coin);
+	/**
+	 * 根据会员号返回用户惠耳币
+	 * @param memberno
+	 * @return
+	 */
+	public String findCoin(String memberno);
+	
+	/**
+	 * 编辑会员列表，模糊查询
+	 * @param accountId
+	 * @param memberName
+	 * @param memberId
+	 * @param memberPhone
+	 * @param rownum
+	 * @param page
+	 * @return
+	 */
+	Row getEditMemberList(String accountId, String memberName, String memberId,
+			String memberPhone, int rownum, int page);
+	
+	//新增
+	/**
+	 * 修改会员联系方式
+	 * @param oldPhone
+	 * @param newPhone
+	 */
+	String changePhone(String oldPhone,String newPhone);
+}

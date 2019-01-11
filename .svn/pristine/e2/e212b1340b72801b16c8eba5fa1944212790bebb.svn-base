@@ -1,0 +1,166 @@
+package cn.edu.hdu.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.apache.log4j.Logger;
+import org.hibernate.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.zlzkj.app.util.HqlBuilder;
+import com.zlzkj.core.sql.Row;
+
+import cn.edu.hdu.Code.UrlCode;
+import cn.edu.hdu.config.webSend;
+import cn.edu.hdu.dao.impl.MemBatDaoImpl;
+import cn.edu.hdu.pojo.MemBat;
+import cn.edu.hdu.service.MemBatService;
+import cn.edu.hdu.util.DataUtil;
+
+
+//新增
+@Service("memBatService")
+public class MemBatServiceImpl extends GenericService<MemBat> implements MemBatService {
+	private Logger logger=Logger.getLogger(MemBatServiceImpl.class);
+	
+	@Resource
+	private GlobalCfgServiceImpl globalCfgService;
+	
+	@Resource
+	private BatteryServiceImpl batteryService;
+	
+	public MemBatDaoImpl getMemBatDao() {
+        return (MemBatDaoImpl)this.getGenericDao();
+    }
+
+	@Autowired
+	public void setMemBatDaoImpl(MemBatDaoImpl memBatDao) {
+	    this.setGenericDao(memBatDao);
+	}
+	
+	
+	@Override
+	public long getBatteryReQty(String memberNO,String batteryType) {
+		List<MemBat> memBat=this.findByProperty("memberNO", memberNO);
+		if(memBat!=null){
+			for (MemBat mb : memBat) {
+				if(mb.getBatteryType()!=null&&mb.getBatteryType().equals(batteryType)){
+					return mb.getBatteryReQty();
+				}
+			}
+		}
+		logger.info("getBatteryReQty()：在剩余电池查询方法中找不到该会员");
+		return 0;
+	}
+
+	@Override
+	public long getBatteryQty(String memberNO,String batteryType) {
+		List<MemBat> memBat=this.findByProperty("memberNO", memberNO);
+		if(memBat!=null){
+			for (MemBat mb : memBat) {
+				if(mb.getBatteryType()!=null&&mb.getBatteryType().equals(batteryType)){
+					return mb.getBatteryQty();
+				}
+			}
+		}
+		logger.info("getBatteryQty()：在电池数量查询方法中找不到该会员");
+		return 0;
+	}
+
+	@Override
+	public void addMenBat(MemBat memBat) {
+		this.save(memBat);
+		//this.getmemBatDao().save(memBat);
+		
+	}
+
+	@Override
+	public Row getMemBatList(String memberId, int rownum, int page,String account) {
+		HqlBuilder hb = new HqlBuilder();
+		String sql_data = hb.select("m.id,m.member_id,m.battery_type,m.battery_re_qty,m.battery_qty ")
+				.from("mem_bat m")
+				.where("m.member_id", memberId)
+				.where("m.status", "full")
+				.orderby("m.id", "DESC")
+				.buildHql();
+		Query query = this.getSqlQuery(sql_data);
+		hb.setParam(query);
+		List<Object[]> accList = DataUtil.getPages(query, page, rownum).list();
+		
+		String sql_sum = hb.select("count(*) ")
+				.from("mem_bat m")
+				.where("m.member_id", memberId)
+				.where("m.status", "full")
+				.orderby("m.id", "DESC")
+				.buildHql();
+		query = this.getSqlQuery(sql_sum);
+		hb.setParam(query);
+		Object accSum = query.uniqueResult();
+		List<Row> rows = new ArrayList<Row>();
+		for(Object[] acc:accList){
+				Row row = new Row();
+				row.put("id", acc[0]);
+				row.put("ready_get_bat", ((Integer.parseInt(acc[4].toString())-Integer.parseInt(acc[3].toString()))+"")); //以领取的电池数
+				row.put("member_id", acc[1]);
+				row.put("battery_type", batteryService.findByProperty("type", acc[2]).get(0).getName());
+				try {
+					String b = (String)webSend.sendService(new Object[] {account,acc[2]}, UrlCode.URL, "battNum");
+					if(b==null||b.equals(""))
+						b="0";
+					row.put("battery_num",b);//很慢 
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				row.put("battery_re_qty", acc[3]);
+				rows.add(row);
+			
+		}
+		Row row = new Row();
+		row.put("total", accSum);
+		row.put("rows", rows);
+		return row;
+	}
+	
+	
+	@Override
+	public void getBat(Long id,long getBatNum) {
+		List<MemBat> memBat=this.findByProperty("id", id);
+		String batteryType = memBat.get(0).getBatteryType();
+		long batteryReQty = memBat.get(0).getBatteryReQty()-getBatNum;
+		if(batteryReQty==0){
+			getMemBatDao().updateMemBat(id, batteryType, batteryReQty);
+			getMemBatDao().updateMemBatStatus(id, "empty");
+		}else{
+			getMemBatDao().updateMemBat(id, batteryType, batteryReQty);
+		}
+		
+	}
+	
+	public void delMemBat(String id,String op){
+		getMemBatDao().updateMemBatStatus(id, op, "del");
+	}
+	
+	@Override
+	public MemBat findMemBatById(Long id) {
+		List<MemBat> memBat=this.findByProperty("id", id);
+		return memBat.get(0);
+	}
+
+	public MemBat getMemBatByOrderId(String orderId){
+		List<MemBat> memBat=this.findByProperty("orderId", orderId);
+		if(memBat!=null&&memBat.size()>0)
+			return memBat.get(0);
+		return null;
+	}
+	
+	public MemBat getMemBatByChargeId(String chargeId){
+		List<MemBat> memBat=this.findByProperty("chargeId", chargeId);
+		if(memBat!=null&&memBat.size()>0)
+			return memBat.get(0);
+		return null;
+	}
+}

@@ -1,0 +1,59 @@
+package cn.edu.hdu.service;
+
+import java.util.Date;
+import java.util.List;
+
+import com.zlzkj.core.sql.Row;
+//新增
+public interface BatEventService {
+	/**
+	 *  显示换电池事件
+	 * @param memberName 会员名称
+	 * @param memberId   会员唯一主键
+	 * @param memberPhone  会员手机号
+	 * @param eventType   查询的事件类型
+	 * @param row
+	 * @param rowNumber
+	 * @param acc             当前登陆账号，门店、总部
+	 * @param list        事件类型集合，用于查询时用
+	 * @return
+	 */
+    public Row getBatList(String memberName,String memberId,String memberPhone,String eventType,String storeName,
+    		String row,String rowNumber,String accId,List<String> list);
+    
+    /**
+     * 记录领取电池事件
+     * @param id
+     * @param name
+     * @param score
+     * @param number
+     */
+    public void record(String memberNO, String inStoreNo, String getStoreNo, String batteryType, long getBatNum);
+    
+    /**
+     * 获取电池事件列表
+     * @param memberNO
+     * @param inStoreNo
+     * @param batteryType
+     * @param handleDate
+     * @param page
+     * @param rowNumber
+     * @return
+     */
+    public Row getBatEventList(String memberNO,String inStoreNo,String batteryType,String page,String rowNumber);
+
+    /**
+     * 
+     * @param memberName
+     * @param memberId
+     * @param memberPhone
+     * @param storeName
+     * @param page
+     * @param rowNumber
+     * @param account
+     * @return
+     */
+    public Row getBatEventList(String memberId,String memberName, String memberNo,
+			String memberPhone,String storeName,
+			String page,String rowNumber,String account);
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="409base">
+		<class>cn.edu.hdu.pojo.Menu</class>
+		<class>cn.edu.hdu.pojo.Role</class>
+		<class>cn.edu.hdu.pojo.Activity</class>
+		<class>cn.edu.hdu.pojo.ScoreEvent</class>
+		<class>cn.edu.hdu.pojo.Verify</class>
+		<class>cn.edu.hdu.pojo.PictureDir</class>
+		<class>cn.edu.hdu.pojo.Account</class>
+		<class>cn.edu.hdu.pojo.GlobalCfg</class>
+		<class>cn.edu.hdu.pojo.RRoleMenu</class>
+		<class>cn.edu.hdu.pojo.Gift</class>
+		<class>cn.edu.hdu.pojo.RGiftPicture</class>
+		<class>cn.edu.hdu.pojo.RActiPicture</class>
+		<class>cn.edu.hdu.pojo.Member</class>
+		<class>cn.edu.hdu.pojo.Battery</class>
+		<class>cn.edu.hdu.pojo.Waitscore</class>
+		<class>cn.edu.hdu.pojo.MemBat</class>
+	</persistence-unit>
+</persistence>
+ 
+   

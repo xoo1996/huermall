@@ -1,0 +1,108 @@
+body {
+	background: url(../img/jlbg.png) no-repeat center 0;
+	/* background-size:110%; */
+}
+.login-wrap {
+	width: 650px;
+	height:500px;
+	margin: 0 auto;
+	color: #fff;
+	margin-top: 200px;
+	background:url(../img/logobgNew.png) no-repeat;
+	position:relative;
+	background-size:cover;
+}
+
+.login-wrap-member {
+	width: 650px;
+	height:500px;
+	margin: 0 auto;
+	color: #fff;
+	margin-top: 200px;
+	background:url(../img/logobgNew-q.png) no-repeat;
+	position:relative;
+	background-size:cover;
+}
+
+.clearfix:after {
+	content: "\0020";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.clearfix {
+	clear: both;
+	zoom: 1;
+}
+
+#msg{
+	height:40px;
+    width:360px;
+    font-size:18px;
+    margin-top:5px;
+    border-radius:7px;
+}
+.correct,.error {
+	background-color: transparent;
+	border: #4B8242 solid 1px;
+	padding: 10px 0 0 10px;
+	font-size:18px;
+}
+.correct {
+	border-color: #51a351;
+	color: #4B8242;
+
+}
+.error {
+	color: #fff;
+
+}
+
+
+#form {
+	position: absolute;
+	top:165px;
+	right: 150px;
+}
+.ico_user{
+	background: url(../img/user.png) no-repeat 16px 12px;
+    background-size: 25px 25px;
+}
+.ico_password{
+	background:url(../img/pw.png) no-repeat 16px 12px;
+    background-size: 25px 25px;
+}
+#login-btn {
+    height:56px;
+    width:376px;
+	background: url(../img/logBtn.png) no-repeat;
+	border: none;	
+}
+.loginTd{
+	overflow:hidden;
+	padding:12px;
+	border:1px solid #4B8242;
+	width:350px;
+	margin:0 auto;
+	border-radius:7px;
+	margin-bottom:10px;
+}
+#account,#memberNo,#userName,#password{
+	background-color:transparent!important;
+	border:none;
+    border-left: 1px solid #4B8242;
+	box-shadow:none;
+    border-radius: 0;
+    height: 25px;
+    width:245px;
+	margin:0;
+    margin-left:25px;
+    padding:0 10px;
+    padding-left:35px;
+    color:#4B8242;
+    font-size:18px;
+    
+}
+

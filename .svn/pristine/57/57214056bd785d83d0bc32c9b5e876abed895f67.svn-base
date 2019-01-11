@@ -1,0 +1,11 @@
+package cn.edu.hdu.dao.impl;
+
+import org.springframework.stereotype.Repository;
+
+import cn.edu.hdu.dao.StoreDao;
+import cn.edu.hdu.pojo.Store;
+
+@Repository
+public class StoreDaoImpl extends GenericDao<Store> implements StoreDao {
+
+}

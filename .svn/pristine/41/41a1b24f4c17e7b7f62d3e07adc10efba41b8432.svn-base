@@ -1,0 +1,38 @@
+package cn.edu.hdu.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import cn.edu.hdu.dao.impl.StoreDaoImpl;
+import cn.edu.hdu.pojo.Store;
+import cn.edu.hdu.service.StoreService;
+
+@Service("storeService")
+public class StoreServiceImpl extends GenericService<Store> implements StoreService {
+	
+	@Resource
+	private BatteryServiceImpl batteryService;
+	
+	@Resource
+	private GlobalCfgServiceImpl globalCfgService;
+	
+	public StoreDaoImpl GetBatDao() {
+        return (StoreDaoImpl)this.getGenericDao();
+    }
+
+	@Autowired
+	public void setStoreDao(StoreDaoImpl storeDao) {
+	    this.setGenericDao(storeDao);
+	}
+
+	@Override
+	public Store findStoreByGctId(String gctId) {
+		List<Store> store =this.findByProperty("gctId", gctId); 
+		return store.get(0);  
+	}
+
+}
